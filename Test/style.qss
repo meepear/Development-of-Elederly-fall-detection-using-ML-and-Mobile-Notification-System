@@ -1,0 +1,13 @@
+*{
+    font-size: 20px; 
+    font-family: tahoma;
+    margin-top: 5px     
+}
+        
+QPushButton{
+    color: white;
+}
+        
+#danger{
+    color: red;    
+}
