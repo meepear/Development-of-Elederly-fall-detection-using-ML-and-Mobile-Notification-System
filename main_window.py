@@ -59,9 +59,9 @@ class MainWindow(QWidget):
         self.video_thread.stop()
         event.accept()
 
-# Run the application
-if __name__ == "__main__":
-    app = QApplication([])
-    window = MainWindow()
-    window.show()
-    app.exec()
+# # Run the application
+# if __name__ == "__main__":
+#     app = QApplication([])
+#     window = MainWindow()
+#     window.show()
+#     app.exec()
