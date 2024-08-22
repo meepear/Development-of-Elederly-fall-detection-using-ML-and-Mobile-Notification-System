@@ -1,7 +1,10 @@
 import requests
 
 url = 'https://notify-api.line.me/api/notify'
-token = '4dVdQwJ1jzviBEilsZrRuZCTZDJpFaZjfGD4zgJWpyc'
+# Bot ส่วนตัว
+# token = '4dVdQwJ1jzviBEilsZrRuZCTZDJpFaZjfGD4zgJWpyc'
+# Fall_Down_Alert สำหรับกลุ่ม
+token = '12zYABe0W2vdGWROK5xw09HuBOPX9vqDImeIaTWAr2Q'
 header = {'Content-Type':'application/x-www-form-urlencoded',
           'Authorization':'Bearer ' + token}
 
