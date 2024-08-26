@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalStorage Example</title>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // ตรวจสอบว่ามี obj อยู่ใน localStorage หรือไม่?
+            let OBJ_Language = JSON.parse(localStorage.getItem('Key_Language'));
+            if (!OBJ_Language) {
+
+                // มีข้อมูลเก่าไหม?
+                if (false){
+                    // รอตั้งค่าข้อมูล
+                } else{
+                    // ถ้าไม่มี ให้สร้าง obj ใหม่
+                    OBJ_Language = { CurrentLanguage: 'CL_TH', CurrentCurrency : "CC_TH", ponit: 0};
+                }
+
+                // บันทึก obj ลงใน localStorage
+                localStorage.setItem('Key_Language', JSON.stringify(OBJ_Language));
+            }
+
+            // แสดงผลลัพธ์เริ่มต้นใน element ที่มี id เป็น "Count"
+            document.getElementById("Count").innerText = OBJ_Language.ponit;
+
+            // ฟังก์ชันสำหรับเพิ่มค่า
+            function Plust_Count(){
+                OBJ_Language.ponit += 1;
+                document.getElementById("Count").innerText = OBJ_Language.ponit;
+                console.log("Count: " + OBJ_Language.ponit);
+                // อัปเดตค่าใน localStorage
+                Update_Storage(OBJ_Language.ponit);
+            }
+
+            // ฟังก์ชันสำหรับอัปเดตข้อมูลใน localStorage
+            function Update_Storage(value) {
+                OBJ_Language.ponit = value;
+                localStorage.setItem('Key_Language', JSON.stringify(OBJ_Language));
+            }
+
+            // ให้แน่ใจว่าฟังก์ชัน Plust_Count() สามารถเข้าถึงได้
+            window.Plust_Count = Plust_Count;
+        });
+    </script>
+</head>
+<body>
+    <button onclick="Plust_Count()">Click</button>
+    <span id="Count"></span>
+    <button onclick="window.location.href='index2.html'">Next2</button>
+</body>
+</html>
