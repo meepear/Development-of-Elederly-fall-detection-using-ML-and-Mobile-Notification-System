@@ -1,7 +1,9 @@
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtWidgets import (QApplication, QLabel, QVBoxLayout, QHBoxLayout, QWidget, QSizePolicy, QPushButton, QDialog, QCheckBox, QFormLayout)
 from PyQt6.QtGui import QPixmap
-from video_capture_thread import VideoCaptureThread
+# from video_capture_thread import VideoCaptureThread
+from Fall_Down_II import VideoCaptureThread
+
 
 class ConfigDialog(QDialog):
     def __init__(self, parent=None):
