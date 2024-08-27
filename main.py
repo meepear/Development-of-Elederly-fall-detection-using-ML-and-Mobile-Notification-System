@@ -2,7 +2,7 @@ import sys
 # sys ใช้สำหรับบางคำสั่งหรือบาง argv และเพื่อต้องการจัดการกับ Command-Line
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QMessageBox , 
-    QPushButton, QMainWindow, QMessageBox,
+    QPushButton, QMainWindow,
     QVBoxLayout, QLabel, QLineEdit,
     QGridLayout)
 # QApplication เป็นตัวจัดการ application และจัดการ QWidget
@@ -19,41 +19,46 @@ class MainWindow(QMainWindow):
         # self.showFullScreen()
         self.resize(1600, 900)
         
-        # สร้าง central widget และ layout หลัก
-        self.central_widget = QWidget()
-        self.main_layout = QVBoxLayout()
-        self.central_widget.setLayout(self.main_layout)
-        self.setCentralWidget(self.central_widget)
-
-        # สร้างปุ่ม
-        self.button = QPushButton("Click")
-        self.button.clicked.connect(self.show_input_layout)
-        
-        # เพิ่มปุ่มลงใน layout
-        self.main_layout.addWidget(self.button)
-
-    def show_input_layout(self):
-        # สร้าง layout ใหม่
-        input_layout = QGridLayout()
-        
-        # สร้าง QLabel และ QLineEdit
-        label = QLabel("What is your name?")
-        self.line_edit = QLineEdit()
-        
-        # เพิ่ม widget ลงใน layout
-        input_layout.addWidget(label, 0, 0)  # เพิ่ม label ที่แถวที่ 0, คอลัมน์ที่ 0
-        input_layout.addWidget(self.line_edit, 1, 0)  # เพิ่ม QLineEdit ที่แถวที่ 1, คอลัมน์ที่ 0
-        
-        # ล้าง layout หลักก่อนเพิ่ม layout ใหม่
-        while self.main_layout.count():
-            child = self.main_layout.itemAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-            else:
-                child.layout().deleteLater()
-        
-        # เพิ่ม layout ใหม่ลงใน layout หลัก
-        self.main_layout.addLayout(input_layout)
+        # setting geometry 
+        self.setGeometry(100, 100, 600, 400) 
+  
+        # calling method 
+        self.UiComponents() 
+  
+        # showing all the widgets 
+        self.show() 
+  
+    # method for widgets 
+    def UiComponents(self): 
+  
+        # creating a push button 
+        button1 = QPushButton("First", self) 
+  
+        # setting geometry of button 
+        button1.setGeometry(200, 150, 100, 40) 
+  
+        # adding action to a button 
+        button1.clicked.connect(self.clickme) 
+  
+        # creating a push button 
+        button2 = QPushButton("Second", self) 
+  
+        # setting geometry of button 
+        button2.setGeometry(210, 160, 100, 40) 
+  
+        # adding action to a button 
+        button2.clicked.connect(self.clickme) 
+  
+        # make it in lower the window 
+        button2.lower() 
+  
+  
+    # action method 
+    def clickme(self): 
+  
+  
+        # printing pressed 
+        print("pressed") 
         
     # Function ตรวจสอบการกดปุ่ม
     def keyPressEvent(self, event):
