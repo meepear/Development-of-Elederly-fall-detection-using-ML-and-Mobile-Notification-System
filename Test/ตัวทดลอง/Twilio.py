@@ -1,18 +1,13 @@
-import os
 from twilio.rest import Client
 
-# Access environment variables for Twilio credentials
-account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
-auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
-
+account_sid = 'AC0018846e8247afaeea6bbe8ad708f1e4'
+auth_token = '5cde2eee24506e0e7c4628f5887b7796'
 client = Client(account_sid, auth_token)
 
-# Send SMS
 message = client.messages.create(
-    body="Hello World",    # The SMS body
-    from_="+14156495637",  # Your Twilio phone number
-    to="+660649769820"     # Recipient's phone number (ensure it's in E.164 format)
+  from_='+13104398998',
+  body='Hello World',
+  to='+660649769820'
 )
 
-# Print the message SID (unique ID for the message)
 print(message.sid)
