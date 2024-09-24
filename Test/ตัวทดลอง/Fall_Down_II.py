@@ -1,28 +1,44 @@
 import sys
 import cv2
 import mediapipe as mp
-from PyQt6.QtCore import QThread, pyqtSignal
+from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QImage, QPixmap
-from PyQt6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QPushButton, QFileDialog, QHBoxLayout, QCheckBox, QSpacerItem, QSizePolicy
 
-# Initializing MediaPipe Pose and Drawing utilities
+import math
+
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
 class VideoCaptureThread(QThread):
     frame_received = pyqtSignal(QImage)
 
-    def __init__(self):
+    def __init__(self, video_source, show_landmarks=True):
         super().__init__()
-        self.cap = cv2.VideoCapture('res/TestVDO.mp4')
-        self.pose = mp_pose.Ppose(
-            min_detection_confidence=0.5,
-            min_tracking_confidence=0.5
-        )
+        self.cap = cv2.VideoCapture(video_source)
+        self.pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
         self.detection_running = True
+        self.show_landmarks = show_landmarks
+        self.previous_p_sum = None
+        self.paused = False
+
+    # xxxxxxxxxxxxxxxxxxxxxxxxxxxx แก้ใหม่ยังใช้งานได้ไม่ดี
+    def calculate_poin_sum(self, landmarks, w, h):
+        x0, y0 = landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x * w, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y * h
+        p_sum = 0
+
+        for landmark in landmarks:
+            xi, yi = landmark.x * w, landmark.y * h
+            p = math.sqrt((x0 - xi) ** 2 + (y0 - yi) ** 2)
+            p_sum += p
+
+        return p_sum
 
     def run(self):
         while self.detection_running:
+            if self.paused:
+                continue
+
             ret, frame = self.cap.read()
             if not ret:
                 continue
@@ -31,49 +47,47 @@ class VideoCaptureThread(QThread):
             results = self.pose.process(RGB)
 
             if results.pose_landmarks:
-                # Draw pose landmarks and connections
-                mp_drawing.draw_landmarks(
-                    frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
-                    mp_drawing.DrawingSpec(color=(0, 255, 255), thickness=2, circle_radius=2),
-                    mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2)
-                )
-
                 landmarks = results.pose_landmarks.landmark
                 h, w, c = frame.shape
-                x_min, x_max = w, 0
-                y_min, y_max = h, 0
 
-                for idx, landmark in enumerate(landmarks):
-                    cx, cy = int(landmark.x * w), int(landmark.y * h)
-                    cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
-                    cv2.putText(frame, f'{idx}', (cx - 10, cy + 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2, cv2.LINE_AA)
-                    cv2.putText(frame, f'({cx}, {cy})', (cx + 10, cy + 10), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1, cv2.LINE_AA)
-                    x_min = min(x_min, cx)
-                    x_max = max(x_max, cx)
-                    y_min = min(y_min, cy)
-                    y_max = max(y_max, cy)
+                # คำนวณผลรวมของ Poin
+                current_p_sum = self.calculate_poin_sum(landmarks, w, h)
 
-                cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+                # หากมี previous_p_sum ให้คำนวณความแตกต่าง
+                if self.previous_p_sum is not None:
+                    delta_p = abs(self.previous_p_sum - current_p_sum)
 
-                left_hip = landmarks[mp_pose.PoseLandmark.LEFT_HIP.value]
-                right_hip = landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value]
-                left_ankle = landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value]
-                right_ankle = landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value]
+                    # ตรวจจับการล้ม (ความแตกต่างที่มากเกิน 1000 เป็นการล้มในที่นี้)
+                    if delta_p > 1000:
+                        posture = "Fall Detected"
+                        color = (0, 0, 255)
+                    else:
+                        posture = "Normal"
+                        color = (0, 255, 0)
 
-                if (left_hip.y < left_ankle.y) and (right_hip.y < right_ankle.y):
-                    posture = "Stand"
-                    color = (0, 255, 0)
-                else:
-                    posture = "Fell Down"
-                    color = (0, 0, 255)
+                    # แสดงข้อความการล้ม
+                    cv2.putText(frame, posture, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
 
-                cx, cy = int((left_hip.x + right_hip.x) / 2 * w), int((left_hip.y + right_hip.y) / 2 * h)
-                cv2.putText(frame, posture, (cx, cy - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
+                # เก็บค่า p_sum ของเฟรมปัจจุบันไว้ใช้ในเฟรมถัดไป
+                self.previous_p_sum = current_p_sum
+
+                if self.show_landmarks:
+                    # วาด landmark
+                    mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
             height, width, channel = frame.shape
             bytes_per_line = 3 * width
             q_image = QImage(frame.data, width, height, bytes_per_line, QImage.Format.Format_BGR888)
             self.frame_received.emit(q_image)
+
+    def set_show_landmarks(self, show_landmarks):
+        self.show_landmarks = show_landmarks
+
+    def pause(self):
+        self.paused = True
+
+    def resume(self):
+        self.paused = False
 
     def stop(self):
         self.detection_running = False
@@ -86,19 +100,99 @@ class VideoDisplayWidget(QWidget):
         self.label = QLabel()
         self.label.setFixedSize(640, 480)
 
+        self.load_button = QPushButton("Load Video")
+        self.load_button.clicked.connect(self.open_file_dialog)
+
+        self.webcam_button = QPushButton("Switch to Webcam")
+        self.webcam_button.clicked.connect(self.switch_to_webcam)
+
+        self.stop_button = QPushButton("Stop Video")
+        self.stop_button.clicked.connect(self.stop_video)
+        self.stop_button.setEnabled(False)
+
+        self.pause_button = QPushButton("Pause Video")
+        self.pause_button.clicked.connect(self.pause_video)
+        self.pause_button.setEnabled(False)
+
+        self.resume_button = QPushButton("Resume Video")
+        self.resume_button.clicked.connect(self.resume_video)
+        self.resume_button.setEnabled(False)
+
+        self.landmark_checkbox = QCheckBox("Show Landmarks")
+        self.landmark_checkbox.setChecked(True)
+        self.landmark_checkbox.stateChanged.connect(self.toggle_landmarks)
+
+        # Layouts
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(self.load_button)
+        button_layout.addWidget(self.webcam_button)
+        button_layout.addWidget(self.stop_button)
+        button_layout.addWidget(self.pause_button)
+        button_layout.addWidget(self.resume_button)
+        button_layout.addWidget(self.landmark_checkbox)
+
         layout = QVBoxLayout()
-        layout.addWidget(self.label)
+        layout.addItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
+        layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
+        layout.addLayout(button_layout)
         self.setLayout(layout)
 
-        self.video_thread = VideoCaptureThread()
+        self.video_thread = None
+
+    def open_file_dialog(self):
+        file_dialog = QFileDialog()
+        video_path, _ = file_dialog.getOpenFileName(self, "Open Video", "", "Video Files (*.mp4 *.avi *.mov)")
+        if video_path:
+            self.start_video(video_path)
+
+    def switch_to_webcam(self):
+        self.start_video(0)  # 0 is the index for the default webcam
+
+    def start_video(self, video_source):
+        if self.video_thread is not None:
+            self.stop_video()
+
+        self.video_thread = VideoCaptureThread(video_source, show_landmarks=self.landmark_checkbox.isChecked())
         self.video_thread.frame_received.connect(self.update_image)
         self.video_thread.start()
+
+        self.stop_button.setEnabled(True)
+        self.pause_button.setEnabled(True)
+        self.resume_button.setEnabled(False)
+
+    def stop_video(self):
+        if self.video_thread is not None:
+            self.video_thread.stop()
+            self.video_thread = None
+            self.label.clear()
+
+        self.stop_button.setEnabled(False)
+        self.pause_button.setEnabled(False)
+        self.resume_button.setEnabled(False)
+
+    def pause_video(self):
+        if self.video_thread is not None:
+            self.video_thread.pause()
+            self.resume_button.setEnabled(True)
+            self.pause_button.setEnabled(False)
+
+    def resume_video(self):
+        if self.video_thread is not None:
+            self.video_thread.resume()
+            self.resume_button.setEnabled(False)
+            self.pause_button.setEnabled(True)
+
+    def toggle_landmarks(self):
+        if self.video_thread is not None:
+            self.video_thread.set_show_landmarks(self.landmark_checkbox.isChecked())
 
     def update_image(self, q_image):
         self.label.setPixmap(QPixmap.fromImage(q_image))
 
     def closeEvent(self, event):
-        self.video_thread.stop()
+        if self.video_thread is not None:
+            self.video_thread.stop()
         event.accept()
 
 if __name__ == "__main__":
