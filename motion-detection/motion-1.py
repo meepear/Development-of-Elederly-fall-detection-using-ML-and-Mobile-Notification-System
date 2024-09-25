@@ -2,8 +2,8 @@
 import cv2 
 # ไลบรารีสำหรับการวิเคราะห์ภาพและตรวจจับท่าทาง รวมถึงการทำงานกับ Landmark ของร่างกาย
 import mediapipe as mp
-
-import csv  # ไลบรารีสำหรับการอ่านและเขียนไฟล์ CSV
+# ไลบรารีสำหรับการอ่านและเขียนไฟล์ CSV
+import csv  
 
 # Initialize MediaPipe Pose
 mp_pose = mp.solutions.pose
