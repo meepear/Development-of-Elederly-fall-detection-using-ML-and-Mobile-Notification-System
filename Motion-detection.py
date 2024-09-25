@@ -6,13 +6,14 @@ from PyQt6.QtGui import QImage, QPixmap
 from PyQt6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QPushButton, QFileDialog, QHBoxLayout, QCheckBox, QSpacerItem, QSizePolicy
 
 import math
+import time
 
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
 class VideoCaptureThread(QThread):
     frame_received = pyqtSignal(QImage)
-# "Video\Walking_Man.mp4"
+
     def __init__(self, video_source, show_landmarks=True):
         super().__init__()
         self.cap = cv2.VideoCapture(video_source)
@@ -22,7 +23,6 @@ class VideoCaptureThread(QThread):
         self.previous_p_sum = None
         self.paused = False
 
-    # xxxxxxxxxxxxxxxxxxxxxxxxxxxx แก้ใหม่ยังใช้งานได้ไม่ดี
     def calculate_poin_sum(self, landmarks, w, h):
         x0, y0 = landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x * w, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y * h
         p_sum = 0
@@ -37,11 +37,12 @@ class VideoCaptureThread(QThread):
     def run(self):
         while self.detection_running:
             if self.paused:
+                time.sleep(0.1)  # หน่วงเวลาเล็กน้อยเมื่อหยุดชั่วคราวเพื่อลดการใช้ CPU
                 continue
 
             ret, frame = self.cap.read()
             if not ret:
-                continue
+                break  # ออกจากลูปเมื่อไม่มีเฟรม
 
             RGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             results = self.pose.process(RGB)
@@ -50,14 +51,12 @@ class VideoCaptureThread(QThread):
                 landmarks = results.pose_landmarks.landmark
                 h, w, c = frame.shape
 
-                # คำนวณผลรวมของ Poin
                 current_p_sum = self.calculate_poin_sum(landmarks, w, h)
 
-                # หากมี previous_p_sum ให้คำนวณความแตกต่าง
                 if self.previous_p_sum is not None:
                     delta_p = abs(self.previous_p_sum - current_p_sum)
 
-                    # ตรวจจับการล้ม (ความแตกต่างที่มากเกิน 1000 เป็นการล้มในที่นี้)
+                    # ตรวจจับการล้ม (ความแตกต่างที่มากเกินเกณฑ์)
                     if delta_p > 1000:
                         posture = "Fall Detected"
                         color = (0, 0, 255)
@@ -68,11 +67,9 @@ class VideoCaptureThread(QThread):
                     # แสดงข้อความการล้ม
                     cv2.putText(frame, posture, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
 
-                # เก็บค่า p_sum ของเฟรมปัจจุบันไว้ใช้ในเฟรมถัดไป
                 self.previous_p_sum = current_p_sum
 
                 if self.show_landmarks:
-                    # วาด landmark
                     mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
             height, width, channel = frame.shape
@@ -98,7 +95,7 @@ class VideoDisplayWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.label = QLabel()
-        self.label.setFixedSize(640, 480)
+        self.label.setFixedSize(640, 480)  # ขนาดเริ่มต้นของ QLabel
 
         self.load_button = QPushButton("Load Video")
         self.load_button.clicked.connect(self.open_file_dialog)
@@ -188,7 +185,9 @@ class VideoDisplayWidget(QWidget):
             self.video_thread.set_show_landmarks(self.landmark_checkbox.isChecked())
 
     def update_image(self, q_image):
-        self.label.setPixmap(QPixmap.fromImage(q_image))
+        # ปรับขนาดวิดีโอให้พอดีกับ QLabel โดยรักษาอัตราส่วนภาพ
+        pixmap = QPixmap.fromImage(q_image).scaled(self.label.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        self.label.setPixmap(pixmap)
 
     def closeEvent(self, event):
         if self.video_thread is not None:
