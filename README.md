@@ -7,4 +7,5 @@ pip install pyqt6 requests mediapipe opencv-python pandas
 
 pip install mediapipe opencv-python
 
+
 โฟล์เดอร์ motion-detection เป็นการเก็บข้อมูลให้อยู่ในไฟล์ .csv มาแสดงผลเป็นกราฟเพื่อวิเคราะห์และนำเสนอ
