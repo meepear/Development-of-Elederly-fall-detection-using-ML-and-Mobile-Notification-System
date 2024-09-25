@@ -10,7 +10,7 @@ mp_pose = mp.solutions.pose
 
 # นำเข้า Video
 video_path = "Video/Walking_Woman.mp4"  # กำหนด Path
-cap = cv2.VideoCapture(video_path)  # เปิดไฟล์วิดีโอสำหรับการอ่าน
+cap = cv2.VideoCapture(video_path)  # เปิดไฟล์วิดีโอ
 # ใช้สำหรับนับเฟรม
 frame_counter = 0  # ตัวแปรนับจำนวนเฟรม
 # อาร์เรย์ข้อมูล
