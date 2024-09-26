@@ -6,13 +6,13 @@
 ```
 **ใช้เท่าที่จำเป็น (เท่านั้น)**
  ```bash
- pip install mediapipe opencv-python
+ pip install mediapipe opencv-python pandas
 ```
 ****
 ### **คำอธิบายไฟล์เดอร์และไฟล์**
 * motion-detection
     * motion-1.py เป็นการเก็บข้อมูลให้อยู่ในไฟล์ .csv
-    * motion-2.py ทำให้ข้อมูลของไฟล์ .csv เป็นกราฟแสดงผล
+    * motion-2.ipynb ทำให้ข้อมูลของไฟล์ .csv เป็นกราฟแสดงผล
 * Video เอาไว้เก็บวีดีโอ
 * ไฟล์งานเก่าไม่ได้ใช้งานแล้ว
     * Diagram อันเก่าแต่ก็ยังใช้อยู่
