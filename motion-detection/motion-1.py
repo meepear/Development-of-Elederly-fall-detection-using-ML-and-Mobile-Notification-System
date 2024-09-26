@@ -59,6 +59,7 @@ cap.release()
 with open('motion-detection/motion-1.csv', mode='w', newline='') as file:
     writer = csv.writer(file)  # สร้างวัตถุ writer สำหรับเขียนข้อมูลในรูปแบบ CSV
     writer.writerow(["frames",  # เขียนชื่อคอลัมน์ในไฟล์ CSV
+                     "x0", "y0", "z0",
                      "x1", "y1", "z1", 
                      "x2", "y2", "z2", 
                      "x3", "y3", "z3", 
