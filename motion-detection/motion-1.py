@@ -9,7 +9,7 @@ import csv
 mp_pose = mp.solutions.pose
 
 # นำเข้า Video
-video_path = "Video/Walking_Man.mp4"  # กำหนด Path
+video_path = "Video/sit-stand-walk-sleep.mp4"  # กำหนด Path
 cap = cv2.VideoCapture(video_path)  # เปิดไฟล์วิดีโอ
 # ใช้สำหรับนับเฟรม
 frame_counter = 0  # ตัวแปรนับจำนวนเฟรม
@@ -52,9 +52,9 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
             data.append(frame_landmarks)  # เก็บข้อมูล Landmark ของเฟรมนี้ใน data
             
             # เช็คว่าเป็นเฟรมที่ 200 หรือไม่
-            if frame_counter == 200:
-                cv2.imwrite("frame_200.jpg", image)  # บันทึกภาพเฟรมที่ 200
-                print("Saved frame 200 as 'frame_200.jpg'")  # แจ้งเตือนว่าบันทึกภาพสำเร็จ
+            # if frame_counter == 200:
+            #     cv2.imwrite("frame_200.jpg", image)  # บันทึกภาพเฟรมที่ 200
+            #     print("Saved frame 200 as 'frame_200.jpg'")  # แจ้งเตือนว่าบันทึกภาพสำเร็จ
             
             frame_counter += 1  # เพิ่มจำนวนเฟรมขึ้น 1
 
@@ -62,7 +62,7 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
 cap.release()
 
 # เขียนข้อมูลลงในไฟล์ CSV
-with open('motion-detection/motion-1.csv', mode='w', newline='') as file:
+with open('motion-detection/sit-stand-walk-sleep.csv', mode='w', newline='') as file:
     writer = csv.writer(file)  # สร้างวัตถุ writer สำหรับเขียนข้อมูลในรูปแบบ CSV
     writer.writerow(["frames",  # เขียนชื่อคอลัมน์ในไฟล์ CSV
                      "x0", "y0", "z0",
