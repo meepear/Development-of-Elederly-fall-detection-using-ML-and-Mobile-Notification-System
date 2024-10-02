@@ -4,24 +4,29 @@ import cv2
 import mediapipe as mp
 # ไลบรารีสำหรับการอ่านและเขียนไฟล์ CSV
 import csv  
+from tqdm import tqdm  # ใช้สำหรับ Progress Bar
 
 # Initialize MediaPipe Pose
 mp_pose = mp.solutions.pose
 
 # นำเข้า Video
-video_path = "Video/sit-stand-walk-sleep.mp4"  # กำหนด Path
+video_name = 'sit-stand-walk-sleep'
+video_path = f"Video/{video_name}.mp4"  # กำหนด Path
 cap = cv2.VideoCapture(video_path)  # เปิดไฟล์วิดีโอ
 # ใช้สำหรับนับเฟรม
 frame_counter = 0  # ตัวแปรนับจำนวนเฟรม
 # อาร์เรย์ข้อมูล
 data = []  # อาร์เรย์สำหรับเก็บข้อมูลตำแหน่งของ Landmark
 
+# ตรวจสอบจำนวนเฟรมทั้งหมดในวิดีโอ
+total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))  # จำนวนเฟรมทั้งหมดในวิดีโอ
+
 # กำหนดค่าในการตรวจจับ (min_detection_confidence) และการติดตาม (min_tracking_confidence)
 with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
-    while cap.isOpened():  # เปิดไฟล์วิดีโออยู่
+    # ใช้ tqdm เพื่อแสดง Progress Bar ในขณะที่วนลูปเฟรมทั้งหมด
+    for frame_counter in tqdm(range(total_frames), desc="Processing frames", ncols=100, colour='blue'):
         success, image = cap.read()  # อ่านเฟรมถัดไปจากวิดีโอ
         if not success:  # ถ้าไม่สามารถอ่านเฟรมได้
-            print("Finished processing video.")  # แจ้งเตือนเมื่ออ่านเฟรมเสร็จสิ้น
             break
 
         # แปลงภาพจาก BGR เป็น RGB เพื่อให้ใช้งานกับ MediaPipe
@@ -31,8 +36,6 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
         results = pose.process(image_rgb)
 
         if results.pose_landmarks:  # ถ้าตรวจจับ Landmark ได้
-            print(f"Frame {frame_counter} Landmarks Positions:")  # แสดงหมายเลขเฟรม
-            
             # เตรียมลิสต์เพื่อเก็บตำแหน่ง Landmark ของเฟรมนี้
             frame_landmarks = [frame_counter]
             
@@ -46,23 +49,15 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
                 frame_landmarks.append(x)  # เพิ่มค่า x
                 frame_landmarks.append(y)  # เพิ่มค่า y
                 frame_landmarks.append(z)  # เพิ่มค่า z
-                print(f"Landmark {id}: (x: {x}, y: {y}, z: {z})")  # แสดงตำแหน่ง (x, y, z) ของ Landmark
 
             # เพิ่มตำแหน่ง Landmark ของเฟรมนี้ลงในอาร์เรย์ data
             data.append(frame_landmarks)  # เก็บข้อมูล Landmark ของเฟรมนี้ใน data
             
-            # เช็คว่าเป็นเฟรมที่ 200 หรือไม่
-            # if frame_counter == 200:
-            #     cv2.imwrite("frame_200.jpg", image)  # บันทึกภาพเฟรมที่ 200
-            #     print("Saved frame 200 as 'frame_200.jpg'")  # แจ้งเตือนว่าบันทึกภาพสำเร็จ
-            
-            frame_counter += 1  # เพิ่มจำนวนเฟรมขึ้น 1
-
 # ปล่อยวิดีโอเมื่ออ่านเสร็จสิ้น
 cap.release()
 
 # เขียนข้อมูลลงในไฟล์ CSV
-with open('motion-detection/sit-stand-walk-sleep.csv', mode='w', newline='') as file:
+with open(f'motion-detection/{video_name}.csv', mode='w', newline='') as file:
     writer = csv.writer(file)  # สร้างวัตถุ writer สำหรับเขียนข้อมูลในรูปแบบ CSV
     writer.writerow(["frames",  # เขียนชื่อคอลัมน์ในไฟล์ CSV
                      "x0", "y0", "z0",
@@ -100,4 +95,4 @@ with open('motion-detection/sit-stand-walk-sleep.csv', mode='w', newline='') as 
                      "x32", "y32", "z32"])
     writer.writerows(data)  # เขียนข้อมูล Landmark ทั้งหมดลงในไฟล์ CSV
     
-print("เสร็จสิ้นการเขียนข้อมูลมนไฟล์ .csv")  # แจ้งผลลัพธ์เมื่อเขียนข้อมูลเสร็จสิ้น
+print("เสร็จสิ้นการเขียนข้อมูลในไฟล์ .csv")  # แจ้งผลลัพธ์เมื่อเขียนข้อมูลเสร็จสิ้น

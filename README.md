@@ -6,7 +6,7 @@
 ```
 **ใช้เท่าที่จำเป็น (เท่านั้น)**
  ```bash
- pip install mediapipe opencv-python pandas
+ pip install mediapipe opencv-python pandas tqdm
 ```
 ****
 ### **คำอธิบายไฟล์เดอร์และไฟล์**
