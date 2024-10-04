@@ -8,7 +8,7 @@ from concurrent.futures import ProcessPoolExecutor
 from tqdm import tqdm  # ใช้สำหรับ Progress Bar
 
 # อ่านไฟล์ CSV
-file_name = 'sleep-stand-sit-walk'
+file_name = 'walk-stand-sleep-sit'
 file_path = f'motion-detection/{file_name}.csv'  # กำหนดไฟล์ CSV
 if not os.path.exists(file_path):
     raise FileNotFoundError(f"ไม่พบไฟล์: {file_path}")
@@ -88,7 +88,7 @@ if __name__ == '__main__':
     total_frames = len(selected_frames)
 
     # ใช้ ProcessPoolExecutor เพื่อประมวลผลเฟรมแบบขนาน
-    with ProcessPoolExecutor(max_workers=4) as executor:
+    with ProcessPoolExecutor(max_workers=6) as executor:
         list(tqdm(executor.map(process_single_frame, selected_frames, [total_frames]*total_frames), total=total_frames))
 
     print("บันทึกภาพเสร็จสิ้น")

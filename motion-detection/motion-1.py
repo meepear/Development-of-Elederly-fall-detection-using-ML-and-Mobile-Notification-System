@@ -10,7 +10,7 @@ from tqdm import tqdm  # ใช้สำหรับ Progress Bar
 mp_pose = mp.solutions.pose
 
 # นำเข้า Video
-video_name = 'sit-stand-walk-sleep'
+video_name = 'walk-stand-sleep-sit'
 video_path = f"Video/{video_name}.mp4"  # กำหนด Path
 cap = cv2.VideoCapture(video_path)  # เปิดไฟล์วิดีโอ
 # ใช้สำหรับนับเฟรม
