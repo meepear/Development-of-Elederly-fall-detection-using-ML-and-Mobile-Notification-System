@@ -12,7 +12,8 @@ mp_pose = mp.solutions.pose
 # นำเข้า Video
 video_name = 'walk-stand-sleep-sit'
 video_path = f"Video/{video_name}.mp4"  # กำหนด Path
-cap = cv2.VideoCapture(video_path)  # เปิดไฟล์วิดีโอ
+# cap = cv2.VideoCapture(video_path)  # เปิดไฟล์วิดีโอ
+cap = cv2.VideoCapture()
 # ใช้สำหรับนับเฟรม
 frame_counter = 0  # ตัวแปรนับจำนวนเฟรม
 # อาร์เรย์ข้อมูล

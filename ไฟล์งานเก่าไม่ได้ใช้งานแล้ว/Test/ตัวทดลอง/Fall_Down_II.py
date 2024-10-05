@@ -59,7 +59,7 @@ class VideoCaptureThread(QThread):
 
                     # ตรวจจับการล้ม (ความแตกต่างที่มากเกิน 1000 เป็นการล้มในที่นี้)
                     if delta_p > 1000:
-                        posture = "Fall Detected"
+                        posture = ""
                         color = (0, 0, 255)
                     else:
                         posture = "Normal"
