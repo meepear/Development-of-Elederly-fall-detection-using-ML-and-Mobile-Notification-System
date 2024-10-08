@@ -5,15 +5,23 @@ import mediapipe as mp
 # ไลบรารีสำหรับการอ่านและเขียนไฟล์ CSV
 import csv  
 from tqdm import tqdm  # ใช้สำหรับ Progress Bar
+import os
+
 
 # Initialize MediaPipe Pose
 mp_pose = mp.solutions.pose
 
 # นำเข้า Video
-video_name = 'walk-stand-sleep-sit'
+video_name = 'Nam'
 video_path = f"Video/{video_name}.mp4"  # กำหนด Path
-# cap = cv2.VideoCapture(video_path)  # เปิดไฟล์วิดีโอ
-cap = cv2.VideoCapture()
+cap = cv2.VideoCapture(video_path)  # เปิดไฟล์วิดีโอ
+# cap = cv2.VideoCapture()
+
+# สร้างโฟลเดอร์สำหรับเก็บภาพแต่ละเฟรม
+output_folder = f"images/frames_{video_name}"
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
+
 # ใช้สำหรับนับเฟรม
 frame_counter = 0  # ตัวแปรนับจำนวนเฟรม
 # อาร์เรย์ข้อมูล
@@ -29,6 +37,10 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
         success, image = cap.read()  # อ่านเฟรมถัดไปจากวิดีโอ
         if not success:  # ถ้าไม่สามารถอ่านเฟรมได้
             break
+
+        # บันทึกภาพเป็นไฟล์ในรูปแบบ PNG โดยตั้งชื่อไฟล์ตามลำดับเฟรม
+        image_filename = f"{output_folder}/image_frame_{frame_counter}.png"
+        cv2.imwrite(image_filename, image)
 
         # แปลงภาพจาก BGR เป็น RGB เพื่อให้ใช้งานกับ MediaPipe
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)

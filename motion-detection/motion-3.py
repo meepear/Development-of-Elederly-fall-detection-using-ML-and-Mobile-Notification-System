@@ -8,8 +8,8 @@ from concurrent.futures import ProcessPoolExecutor
 from tqdm import tqdm  # ใช้สำหรับ Progress Bar
 
 # อ่านไฟล์ CSV
-file_name = 'walk-stand-sleep-sit'
-file_path = f'motion-detection/csv/{file_name}.csv'  # กำหนดไฟล์ CSV
+file_name = 'Nam'
+file_path = f'motion-detection/{file_name}.csv'  # กำหนดไฟล์ CSV
 if not os.path.exists(file_path):
     raise FileNotFoundError(f"ไม่พบไฟล์: {file_path}")
 
