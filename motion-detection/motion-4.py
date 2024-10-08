@@ -25,14 +25,15 @@ for i in range(len(df)):
     frame = df.iloc[i]
     total_distance = 0
     for connection in connections:
-        p1, p2 = connection
-        dx = frame[f'x{p2}'] - frame[f'x{p1}']
-        dy = frame[f'y{p2}'] - frame[f'y{p1}']
-        dz = frame[f'z{p2}'] - frame[f'z{p1}']
+        PosePrevious, PoseCurent = connection
+        dx = frame[f'x{PoseCurent}'] - frame[f'x{PosePrevious}']
+        dy = frame[f'y{PoseCurent}'] - frame[f'y{PosePrevious}']
+        dz = frame[f'z{PoseCurent}'] - frame[f'z{PosePrevious}']
         distance = np.sqrt(dx**2 + dy**2 + dz**2)  # คำนวณระยะทาง
         total_distance += distance
     movement_rates.append(total_distance)
 
+# *******************************แก้
 # Step 4: คำนวณอัตราการเคลื่อนไหวใน 1 วินาที (60 เฟรม)
 movement_rates_per_second = []
 for i in range(0, len(movement_rates), 60):

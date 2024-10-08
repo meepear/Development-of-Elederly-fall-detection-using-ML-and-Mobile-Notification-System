@@ -57,6 +57,11 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
 # ปล่อยวิดีโอเมื่ออ่านเสร็จสิ้น
 cap.release()
 
+
+# *******************************************เพิ่ม elapsed time ในคอลัม 5/10/2024
+# รวมโค้ดส่วนของ csv เข้าไปทำงานในขั้นตอน pose แล้วเพิ่มคอลั่ม
+# 1. เวลาที่อ้างอิงจาก elapsed time หลังจากที่ได้ ภาพ 
+# 2. เวลาที่อ้างอิงจาก elapsed time หลังจากที่ได้ Pose
 # เขียนข้อมูลลงในไฟล์ CSV
 with open(f'motion-detection/{video_name}.csv', mode='w', newline='') as file:
     writer = csv.writer(file)  # สร้างวัตถุ writer สำหรับเขียนข้อมูลในรูปแบบ CSV

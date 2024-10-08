@@ -9,19 +9,20 @@ from tqdm import tqdm  # ใช้สำหรับ Progress Bar
 
 # อ่านไฟล์ CSV
 file_name = 'walk-stand-sleep-sit'
-file_path = f'motion-detection/{file_name}.csv'  # กำหนดไฟล์ CSV
+file_path = f'motion-detection/csv/{file_name}.csv'  # กำหนดไฟล์ CSV
 if not os.path.exists(file_path):
     raise FileNotFoundError(f"ไม่พบไฟล์: {file_path}")
 
 df = pd.read_csv(file_path)  # อ่านข้อมูลจากไฟล์ CSV
 
 # โฟลเดอร์สำหรับบันทึกภาพกราฟแต่ละเฟรม
-output_dir = f'motion-detection/output_frames_{file_name}'
+output_dir = f'motion-detection/output_frames_Folder/output_frames_{file_name}'
 os.makedirs(output_dir, exist_ok=True)
 plt.switch_backend('Agg')
 
 # ฟังก์ชันสำหรับการสร้าง skeleton พร้อม grid
 def plot_skeleton(frame_data, frame_number, total_frames):
+    # *******************************แก้ เอาเฉพาะลำตัวแขนขาไม่เอานิ้ว ใบหน้าเอาแค่จมูก
     connections = [
         (0, 1), (1, 2), (2, 3), (3, 7), (0, 4), (4, 5), (5, 6), (6, 8), 
         (9, 10), (11, 12), (12, 24), (24, 23), (23, 11), 
@@ -93,7 +94,8 @@ if __name__ == '__main__':
 
     print("บันทึกภาพเสร็จสิ้น")
     
-    video_path = f'motion-detection/{file_name}.mp4'
+    video_path = f'motion-detection/output_video/{file_name}.mp4'
+    os.makedirs(video_path, exist_ok=True)
     frame_rate = 60  # กำหนด frame rate ของวิดีโอ
     frame_size = (1920, 1080)  # ขนาดเฟรม (กว้าง x สูง)
 
