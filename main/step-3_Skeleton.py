@@ -19,8 +19,7 @@ pose = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5)
 def process_video(input_path, output_path):
     cap = cv2.VideoCapture(input_path)
     
-    # ใช้ codec 'mp4v' สำหรับการบันทึกไฟล์ MP4
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # หรือใช้ 'avc1' สำหรับ H.264
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v') 
     fps = cap.get(cv2.CAP_PROP_FPS)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -56,9 +55,20 @@ def process_video(input_path, output_path):
                     x2, y2 = int(pt2.x * iw), int(pt2.y * ih)
                     cv2.line(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-                # วาดจุดที่สำคัญ
-                cv2.circle(frame, (int(results.pose_landmarks.landmark[0].x * iw), int(results.pose_landmarks.landmark[0].y * ih)), 5, (0, 0, 255), -1)
+                # คำนวณ Center of Gravity ระหว่างจุดที่ 24 และ 23
+                pt_24 = results.pose_landmarks.landmark[24]
+                pt_23 = results.pose_landmarks.landmark[23]
+                cog_x = int((pt_24.x + pt_23.x) / 2 * iw)
+                cog_y = int((pt_24.y + pt_23.y) / 2 * ih)
 
+                # วาดจุด Center of Gravity
+                cv2.circle(frame, (cog_x, cog_y), 5, (255, 0, 0), -1)  # จุดสีฟ้า
+
+                # เชื่อม Center of Gravity กับ landmark 0
+                pt_0 = results.pose_landmarks.landmark[0]
+                x0, y0 = int(pt_0.x * iw), int(pt_0.y * ih)
+                cv2.line(frame, (cog_x, cog_y), (x0, y0), (255, 0, 0), 2)
+            
             out.write(frame)
 
             # อัปเดต progress bar

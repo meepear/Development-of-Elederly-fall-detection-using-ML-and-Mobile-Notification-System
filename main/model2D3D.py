@@ -36,6 +36,13 @@ def plot_2d(frame_data, frame_index):
     for i in poin:  
         x, y = frame_data[f'x{i}'], frame_data[f'y{i}']
         plt.plot(x, y, 'ro', markersize=5)
+        
+    # คำนวณ Center of Gravity (CoG) ระหว่างจุดที่ 24 และ 23
+    x_cog = (frame_data['x24'] + frame_data['x23']) / 2
+    y_cog = (frame_data['y24'] + frame_data['y23']) / 2
+
+    # วาดจุด CoG
+    plt.plot(x_cog, y_cog, 'bo', markersize=7)  # ใช้สีน้ำเงิน (b) สำหรับจุด CoG
 
     # ตั้งค่าขอบเขตแกน x และ y
     plt.xlim(0, 1920)
@@ -63,6 +70,15 @@ def plot_3d(frame_data, frame_index):
     for i in poin: 
         x, y, z = frame_data[f'x{i}'], frame_data[f'z{i}'], frame_data[f'y{i}']
         ax.scatter(x, y, z, c='r', s=20)
+
+    # คำนวณ Center of Gravity (CoG) ระหว่างจุดที่ 24 และ 23
+    x_cog = (frame_data['x24'] + frame_data['x23']) / 2
+    y_cog = (frame_data['y24'] + frame_data['y23']) / 2
+    z_cog = (frame_data['z24'] + frame_data['z23']) / 2
+
+    # วาดจุด CoG
+    ax.scatter(x_cog, y_cog, z_cog, c='b', s=30)  # ใช้สีน้ำเงิน (b) สำหรับจุด CoG
+
 
     # ตั้งค่าขอบเขตของแกน X, Y และ Z
     ax.set_xlim(1920, 0)
