@@ -17,8 +17,8 @@ class VideoCaptureThread(QThread):
         self.is_recording = False
         
         # >-------- ปรับความละเอียดในการบันทึกวีดีโอ --------<
-        WIDTH = 1280
-        HEIGHT = 720
+        WIDTH = 1980
+        HEIGHT = 1080
         FPS = 30
         
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
