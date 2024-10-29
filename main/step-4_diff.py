@@ -1,64 +1,90 @@
 import pandas as pd
 import numpy as np
+import os
 
-# Step 1: อ่านข้อมูลจากไฟล์ CSV
-file_name = 'pun_walk_front_1'
-file_dir = f'csv/{file_name}.csv'
-df = pd.read_csv(file_dir)
+# ฟังก์ชันหลักที่ทำงานตามที่อธิบาย
+def calculate_rates():
+    # อ่านไฟล์ CSV
+    file_name = 'pun_walk_front_1.csv'
+    csv_path = os.path.join('csv', file_name)
+    
+    data = pd.read_csv(csv_path)
+    
+    # กำหนดลิสต์เพื่อเก็บค่าผลลัพธ์
+    frame_rates = []
+    angular_velocities = []
+    movement_rates = []
 
-# คำนวณส่วนต่างของ Image_Timestamp และ Pose_Timestamp
-df['Frame_rate'] = abs(df['Image_Timestamp'] - df['Pose_Timestamp'])
+    # กำหนดจุดที่เชื่อมต่อสำหรับ Movement Rate
+    connections = [(11, 12), (12, 24), (24, 23), (23, 11), 
+                   (15, 13), (13, 11), (12, 14), (14, 16), 
+                   (23, 25), (25, 27), (24, 26), (26, 28)]
+    
+    # คำนวณค่าตามจำนวนเฟรมที่มี
+    for n in range(1, len(data) - 1):  # เฟรมเริ่มจาก 1 ถึง len(data) - 2
+        # คำนวณ Frame Rate
+        image_timestamp_n = data['Image_Timestamp'][n]
+        pose_timestamp_n = data['Pose_Timestamp'][n]
+        image_timestamp_n1 = data['Image_Timestamp'][n + 1]
+        pose_timestamp_n1 = data['Pose_Timestamp'][n + 1]
+        
+        frame_diff_n = abs(image_timestamp_n - pose_timestamp_n)
+        frame_diff_n1 = abs(image_timestamp_n1 - pose_timestamp_n1)
+        frame_rate = abs(frame_diff_n - frame_diff_n1)
+        
+        frame_rates.append(frame_rate)
+        
+        # คำนวณ Angular Velocity
+        cog_x_n = (data.iloc[n, 24] + data.iloc[n, 23]) / 2
+        cog_y_n = (data.iloc[n, 24 + 1] + data.iloc[n, 23 + 1]) / 2
+        cog_x_n1 = (data.iloc[n + 1, 24] + data.iloc[n + 1, 23]) / 2
+        cog_y_n1 = (data.iloc[n + 1, 24 + 1] + data.iloc[n + 1, 23 + 1]) / 2
+        
+        dy_n = cog_y_n - data.iloc[n, 0]  # y ของตำแหน่งที่ 0
+        dx_n = cog_x_n - data.iloc[n, 0]  # x ของตำแหน่งที่ 0
+        
+        dy_n1 = cog_y_n1 - data.iloc[n + 1, 0]
+        dx_n1 = cog_x_n1 - data.iloc[n + 1, 0]
+        
+        angle_n = np.arctan2(dy_n, dx_n) * 180 / np.pi
+        angle_n1 = np.arctan2(dy_n1, dx_n1) * 180 / np.pi
+        
+        angular_velocity = abs(angle_n1 - angle_n) / frame_rate if frame_rate != 0 else 0
+        angular_velocities.append(angular_velocity)
+        
+        # คำนวณ Movement Rate
+        total_length_n = 0
+        total_length_n1 = 0
+        
+        for connection in connections:
+            point_a_n = data.iloc[n, connection[0]]
+            point_b_n = data.iloc[n, connection[1]]
+            total_length_n += np.sqrt((point_a_n - point_b_n) ** 2 + (data.iloc[n, connection[0] + 1] - data.iloc[n, connection[1] + 1]) ** 2)
+            
+            point_a_n1 = data.iloc[n + 1, connection[0]]
+            point_b_n1 = data.iloc[n + 1, connection[1]]
+            total_length_n1 += np.sqrt((point_a_n1 - point_b_n1) ** 2 + (data.iloc[n + 1, connection[0] + 1] - data.iloc[n + 1, connection[1] + 1]) ** 2)
+        
+        if n > 0:
+            movement_rate_n = np.sqrt(((total_length_n - total_length_n1) ** 2) / 1920 + ((total_length_n - total_length_n1) ** 2) / 1080) / frame_rate
+        else:
+            movement_rate_n = 0
+            
+        movement_rates.append(movement_rate_n)
 
-# ฟังก์ชันช่วยคำนวณส่วนต่าง x, y
-def calc_diff(df, point1, point2):
-    diff_x = abs(df[f'x{point2}'] - df[f'x{point1}'])
-    diff_y = abs(df[f'y{point2}'] - df[f'y{point1}'])
-    return diff_x, diff_y
+    # สร้าง DataFrame สำหรับผลลัพธ์
+    result_df = pd.DataFrame({
+        'Frame_Rate': frame_rates,
+        'Angular_Velocity': angular_velocities,
+        'Movement_Rate': movement_rates
+    })
 
-# Step 2: เชื่อมต่อจุด
-connections = [(11, 12), (12, 24), (24, 23), (23, 11),
-         (15, 13), (13, 11),
-         (12, 14), (14, 16),
-         (23, 25), (25, 27),
-         (24, 26), (26, 28)]
+    # บันทึกผลลัพธ์ลงใน CSV
+    output_csv_path = os.path.join('csv', 'data_walk.csv')
+    if os.path.exists(output_csv_path):
+        result_df.to_csv(output_csv_path, mode='a', header=False, index=False)
+    else:
+        result_df.to_csv(output_csv_path, index=False)
 
-diff_x_total = []
-diff_y_total = []
-
-# Step 3: Diff X และ Y
-for point1, point2 in connections:
-    diff_x, diff_y = calc_diff(df, point1, point2)
-    diff_x_total.append(diff_x)
-    diff_y_total.append(diff_y)
-
-# แปลงเป็น DataFrame เพื่อนำไปรวมกับข้อมูลใหม่
-diff_x_total = np.sum(diff_x_total, axis=0)
-diff_y_total = np.sum(diff_y_total, axis=0)
-
-# หาค่ากึ่งกลางของจุด (23, 24)
-midpoint_x = (df['x23'] + df['x24']) / 2
-midpoint_y = (df['y23'] + df['y24']) / 2
-
-# คำนวณมุม Degree กับจุดที่ 0 (x0, y0)
-def calc_degree(x0, y0, mid_x, mid_y):
-    delta_x = mid_x - x0
-    delta_y = mid_y - y0
-    angle = np.arctan2(delta_y, delta_x)  # ใช้ np.arctan2 สำหรับ Series
-    return np.sin(angle)
-
-# เรียกใช้ฟังก์ชัน calc_degree
-df['Degree'] = calc_degree(df['x0'], df['y0'], midpoint_x, midpoint_y)
-
-# สร้าง DataFrame ใหม่เพื่อเก็บผลลัพธ์
-output_df = pd.DataFrame({
-    'Frame_rate': df['Frame_rate'],
-    'Diff_x': diff_x_total,
-    'Diff_y': diff_y_total,
-    'Degree': df['Degree']
-})
-
-# บันทึกเป็นไฟล์ CSV ใหม่
-output_file = 'csv/movement_walk.csv'
-output_df.to_csv(output_file, index=False)
-
-print(f"ผลลัพธ์ถูกบันทึกลงในไฟล์ {output_file} เรียบร้อยแล้ว!")
+# เรียกใช้งานฟังก์ชัน
+calculate_rates()
