@@ -53,48 +53,52 @@ def create_csv_from_videos(video_folder, output_folder):
     # อ่านไฟล์วีดีโอจากโฟลเดอร์ที่ระบุ
     video_files = [f for f in os.listdir(video_folder) if f.endswith(('.mp4', '.avi', '.mov', '.mkv'))]
     
-    # ใช้ tqdm ในการแสดง Progress Bar สำหรับไฟล์วีดีโอ
-    for video_file in tqdm(video_files, desc="Processing Videos", unit="video"):
+
+    for video_file in video_files:
         video_path = os.path.join(video_folder, video_file)
         cap = cv2.VideoCapture(video_path)
         frame_count = 0
         start_time = time.time()  # เริ่มจับเวลา
 
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret:
-                break
-            
-            # เปลี่ยนสีจาก BGR เป็น RGB
-            rgb_image_display = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            ih, iw, _ = rgb_image_display.shape  # รับขนาดของภาพจากเฟรมปัจจุบัน
-            
-            # บันทึก timestamp เมื่อได้รับเฟรม
-            image_timestamp = time.time() - start_time
-            
-            # ประมวลผลภาพด้วย MediaPipe Pose
-            results = pose.process(rgb_image_display)
+        # ล้างข้อมูลเก่าทิ้ง
+        df = pd.DataFrame(columns=columns)  # สร้าง DataFrame ใหม่สำหรับข้อมูลในวิดีโอปัจจุบัน
+        with tqdm(total=frame_count, desc=f'Processing {video_file}', unit='frame') as pbar:
+            while cap.isOpened():
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                
+                # เปลี่ยนสีจาก BGR เป็น RGB
+                rgb_image_display = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                ih, iw, _ = rgb_image_display.shape  # รับขนาดของภาพจากเฟรมปัจจุบัน
+                
+                # บันทึก timestamp เมื่อได้รับเฟรม
+                image_timestamp = time.time() - start_time
+                
+                # ประมวลผลภาพด้วย MediaPipe Pose
+                results = pose.process(rgb_image_display)
 
-            # บันทึก timestamp เมื่อได้ค่า (x, y, z)
-            pose_timestamp = time.time() - start_time
-            
-            # เตรียมข้อมูลเฟรม
-            frame_data = [int(frame_count), image_timestamp, pose_timestamp]  # เปลี่ยน frame_count เป็น int
+                # บันทึก timestamp เมื่อได้ค่า (x, y, z)
+                pose_timestamp = time.time() - start_time
+                
+                # เตรียมข้อมูลเฟรม
+                frame_data = [int(frame_count), image_timestamp, pose_timestamp]  # เปลี่ยน frame_count เป็น int
 
-            # เช็คว่ามี landmark ที่ตรวจจับได้
-            if results.pose_landmarks:
-                for i, landmark in enumerate(results.pose_landmarks.landmark):
-                    x = int(landmark.x * iw)  # ปรับค่า x ให้อยู่ในช่วงพิกเซลของภาพ
-                    y = int(landmark.y * ih)  # ปรับค่า y ให้อยู่ในช่วงพิกเซลของภาพ
-                    z = landmark.z  # รับค่า Z ของ Landmark
-                    frame_data.extend([x, y, z])  # เพิ่ม x, y, z ลงใน frame_data
-            
-            # ตรวจสอบให้แน่ใจว่าข้อมูลเฟรมมีจำนวนคอลัมน์ตรงตามที่ต้องการ
-            if len(frame_data) == len(columns):
-                df.loc[len(df)] = frame_data  # เพิ่มแถวใหม่ใน DataFrame
-            
-            frame_count += 1
-            
+                # เช็คว่ามี landmark ที่ตรวจจับได้
+                if results.pose_landmarks:
+                    for i, landmark in enumerate(results.pose_landmarks.landmark):
+                        x = int(landmark.x * iw)  # ปรับค่า x ให้อยู่ในช่วงพิกเซลของภาพ
+                        y = int(landmark.y * ih)  # ปรับค่า y ให้อยู่ในช่วงพิกเซลของภาพ
+                        z = landmark.z  # รับค่า Z ของ Landmark
+                        frame_data.extend([x, y, z])  # เพิ่ม x, y, z ลงใน frame_data
+                
+                # ตรวจสอบให้แน่ใจว่าข้อมูลเฟรมมีจำนวนคอลัมน์ตรงตามที่ต้องการ
+                if len(frame_data) == len(columns):
+                    df.loc[len(df)] = frame_data  # เพิ่มแถวใหม่ใน DataFrame
+                
+                frame_count += 1
+                pbar.update(1)  # อัพเดต Progress Bar
+
         cap.release()  # ปิด VideoCapture
 
         # สร้างชื่อไฟล์ CSV จากชื่อไฟล์วีดีโอ

@@ -17,7 +17,7 @@ def calculate_rates():
     movement_rates = []
     
     # กำหนดค่า threshold สำหรับ frame_rate ที่น้อยที่สุด
-    frame_rate_threshold = 0.0049
+    frame_rate_threshold = 0.0039
     
     skipped_frames = []  # เก็บเฟรมที่ข้าม
 
