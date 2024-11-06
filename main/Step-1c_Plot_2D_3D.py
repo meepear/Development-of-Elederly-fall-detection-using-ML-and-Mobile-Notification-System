@@ -44,6 +44,7 @@ def plot_2d(frame_data, frame_index):
 
     # วาดจุด CoG
     plt.plot(x_cog, y_cog, 'bo', markersize=7)  # ใช้สีน้ำเงิน (b) สำหรับจุด CoG
+    plt.plot([x_cog, frame_data['x0']], [y_cog, frame_data['y0']], 'bo-', linewidth=2)
 
     # ตั้งค่าขอบเขตแกน x และ y
     plt.xlim(0, 1920)
